@@ -8,43 +8,50 @@ from mydataset import OmniglotTrain, OmniglotTest
 from torch.utils.data import DataLoader
 from torch.autograd import Variable
 import matplotlib.pyplot as plt
-from model import Siamese
+from model import Siamese1D
 import time
 import numpy as np
 import gflags
 import sys
 from collections import deque
 import os
+import argparse
 
 
 if __name__ == '__main__':
-
-    Flags = gflags.FLAGS
-    gflags.DEFINE_bool("cuda", True, "use cuda")
-    gflags.DEFINE_string("train_path", "/home/data/pin/data/omniglot/images_background", "training folder")
-    gflags.DEFINE_string("test_path", "/home/data/pin/data/omniglot/images_evaluation", 'path of testing folder')
-    gflags.DEFINE_integer("way", 20, "how much way one-shot learning")
-    gflags.DEFINE_string("times", 400, "number of samples to test accuracy")
-    gflags.DEFINE_integer("workers", 4, "number of dataLoader workers")
-    gflags.DEFINE_integer("batch_size", 128, "number of batch size")
-    gflags.DEFINE_float("lr", 0.00006, "learning rate")
-    gflags.DEFINE_integer("show_every", 10, "show result after each show_every iter.")
-    gflags.DEFINE_integer("save_every", 100, "save model after each save_every iter.")
-    gflags.DEFINE_integer("test_every", 100, "test model after each test_every iter.")
-    gflags.DEFINE_integer("max_iter", 50000, "number of iterations before stopping")
-    gflags.DEFINE_string("model_path", "/home/data/pin/model/siamese", "path to store model")
-    gflags.DEFINE_string("gpu_ids", "0,1,2,3", "gpu ids used to train")
-
-    Flags(sys.argv)
+    parser = argparse.ArgumentParser("Siamese network training script.")
+    parser.add_argument("--cuda", type=bool, default=True,
+                        help="Use CUDA")
+    parser.add_argument("--train_path", type=str, default="images_background",
+                        help="training folder path")
+    parser.add_argument("--test_path", type=str, default="images_evaluation",
+                        help="testing folder path")
+    parser.add_argument("--model_path", type=str, default="model/siamese",
+                        help="path to save model checkpoints")
+    parser.add_argument("--n_way", type=int, default=40,
+                        help="number of ways for one-shot learning")
+    parser.add_argument("--accuracy_test_samples", type=int, default=40,
+                        help="number of samples to test accuracy")
+    parser.add_argument("--num_workers", type=int, default=4,
+                        help="number of data-loader worker threads")
+    parser.add_argument("--batch_size", type=int, default=128,
+                        help="Number of batch size")
+    parser.add_argument("--lr", type=float, default=0.00006,
+                        help="learning rate")
+    # gflags.DEFINE_integer("show_every", 10, "show result after each show_every iter.")
+    parser.add_argument("--model_checkpoint_freq", type=int, default=100,
+                        help="Model checkpointing frequency per number of iterations")
+    parser.add_argument("--model_test_freq", type=int, default=100,
+                        help="Model testing frequency per number of iterations")
+    parser.add_argument("--max_iter", type=int, default=50000,
+                        help="Maximum number of iterations used before stopping training")
+    parser.add_argument("--gpu_ids", type=str, default="0",
+                        help="Id of the GPUs used in training")
 
     data_transforms = transforms.Compose([
         transforms.RandomAffine(15),
         transforms.ToTensor()
     ])
-
-
-    # train_dataset = dset.ImageFolder(root=Flags.train_path)
-    # test_dataset = dset.ImageFolder(root=Flags.test_path)
 
 
     os.environ["CUDA_VISIBLE_DEVICES"] = Flags.gpu_ids
@@ -57,7 +64,7 @@ if __name__ == '__main__':
     trainLoader = DataLoader(trainSet, batch_size=Flags.batch_size, shuffle=False, num_workers=Flags.workers)
 
     loss_fn = torch.nn.BCEWithLogitsLoss(size_average=True)
-    net = Siamese()
+    net = Siamese1D()
 
     # multi gpu
     if len(Flags.gpu_ids.split(",")) > 1:
