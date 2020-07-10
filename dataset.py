@@ -18,11 +18,12 @@ class RamanDataset(Dataset):
         self.y = y[:, :fold_pos] if train else y[:, fold_pos:]
 
     def __getitem__(self, item):
-        idx = np.random.choice(self.x.shape[0], 2, replace=False)
-        x_1, x_2 = self.x[idx[0]], self.x[idx[1]]
-        y_1, y_2 = self.y[:, idx[0]], self.y[:, idx[1]]
+        real_idx = item + 1
+        idx_1, idx_2 = real_idx // self.x.shape[0] - 1, real_idx % self.x.shape[1] - 1
+        x_1, x_2 = self.x[idx_1], self.x[idx_2]
+        y_1, y_2 = self.y[:, idx_1], self.y[:, idx_2]
         label = (y_1 * y_2).sum().astype(np.bool).astype(np.float32)
         return x_1, x_2, np.array([label])
 
     def __len__(self):
-        return len(self.x)
+        return len(self.x)**2
