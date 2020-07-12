@@ -22,11 +22,11 @@ def main():
                         help="number of samples to test accuracy")
     parser.add_argument("--num_workers", type=int, default=4,
                         help="number of data-loader worker threads")
-    parser.add_argument("--batch_size", type=int, default=4096,
+    parser.add_argument("--batch_size", type=int, default=128,
                         help="Number of batch size")
     parser.add_argument("--lr", type=float, default=0.00006,
                         help="learning rate")
-    parser.add_argument("--model_checkpoint_freq", type=int, default=10,
+    parser.add_argument("--model_checkpoint_freq", type=int, default=1,
                         help="Model checkpointing frequency per number of epochs")
     parser.add_argument("--num_epochs", type=int, default=50000,
                         help="Maximum number of epochs used before stopping training")
@@ -35,7 +35,7 @@ def main():
     train_data = RamanDataset(args.data_path, args.train_data_fold)
     valid_data = RamanDataset(args.data_path, args.train_data_fold, train=False)
 
-    train_loader = DataLoader(train_data, batch_size=args.batch_size, shuffle=True, num_workers=args.num_workers)
+    train_loader = DataLoader(train_data, batch_size=args.batch_size, shuffle=False, num_workers=args.num_workers)
     valid_loader = DataLoader(valid_data, batch_size=args.batch_size, shuffle=False, num_workers=args.num_workers)
 
     loss_fn = torch.nn.BCEWithLogitsLoss()
@@ -50,7 +50,7 @@ def main():
     for epoch in range(args.num_epochs):
         train_single_epoch(net, train_loader, optimizer, loss_fn, epoch, args.cuda)
         validate_single_epoch(net, valid_loader, loss_fn, epoch, args.cuda)
-        save_model(net, args.model_save_path + "checkpoint-%02d.cpt", epoch, args.model_checkpoint_freq)
+        save_model(net, args.model_path + "checkpoint-%02d.cpt" % (epoch + 1), epoch, args.model_checkpoint_freq)
 
 
 def train_single_epoch(net, train_loader, optimizer, loss_fn, epoch, cuda):

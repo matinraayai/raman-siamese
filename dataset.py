@@ -6,8 +6,8 @@ from sklearn import preprocessing
 class RamanDataset(Dataset):
     def __init__(self, path, train_data_fold, train=True):
         x = np.load(path + '/spectrum.npy').astype(np.float32)
-        y = np.load(path + '/components.npy')
-        assert (x.shape[0] == y.shape[1])
+        y = np.load(path + '/components_naveen.npy')
+        assert (x.shape[0] == y.shape[0])
         fold_pos = int(len(x) * train_data_fold)
         # Pre-processing Xs:============================================================================================
         x = x[:fold_pos] if train else x[fold_pos:]
@@ -15,15 +15,24 @@ class RamanDataset(Dataset):
         scaler = preprocessing.StandardScaler().fit(x)
         self.x = scaler.transform(x).reshape(-1, 1, 881)
         # Pre-processing Ys:============================================================================================
-        self.y = y[:, :fold_pos] if train else y[:, fold_pos:]
+        self.y = y[:fold_pos] if train else y[fold_pos:]
+        # Finding pure components in the dataset:=======================================================================
+        pure_idx = set()
+        for i, entry in enumerate(self.y):
+            if entry.sum() == 1:
+                pure_idx.add(i)
+        self.pure_idx = list(pure_idx)
 
     def __getitem__(self, item):
-        real_idx = item + 1
-        idx_1, idx_2 = real_idx // self.x.shape[0] - 1, real_idx % self.x.shape[1] - 1
-        x_1, x_2 = self.x[idx_1], self.x[idx_2]
-        y_1, y_2 = self.y[:, idx_1], self.y[:, idx_2]
-        label = (y_1 * y_2).sum().astype(np.bool).astype(np.float32)
-        return x_1, x_2, np.array([label])
+        # Randomly select a pure component and its signal
+        pure_component_idx = np.random.choice(len(self.pure_idx))
+        mixture = self.x[item]
+        mixture_label = self.y[item]
+        pure_component = self.x[pure_component_idx]
+        pure_component_label = self.y[pure_component_idx].argmax()
+        # If the component is present in the mixture, the label is 1.0; Else, 0.0
+        label = np.array([mixture_label[pure_component_label] == 1], dtype=np.float32)
+        return pure_component, mixture, label
 
     def __len__(self):
-        return len(self.x)**2
+        return len(self.x)
