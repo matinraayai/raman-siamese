@@ -5,6 +5,7 @@ from sklearn import preprocessing
 
 class RamanDataset(Dataset):
     def __init__(self, path, train_data_fold, train=True):
+        super(RamanDataset, self).__init__()
         x = np.load(path + '/spectrum.npy').astype(np.float32)
         y = np.load(path + '/components_naveen.npy')
         assert (x.shape[0] == y.shape[0])
@@ -33,6 +34,20 @@ class RamanDataset(Dataset):
         # If the component is present in the mixture, the label is 1.0; Else, 0.0
         label = np.array([mixture_label[pure_component_label] == 1], dtype=np.float32)
         return pure_component, mixture, label
+
+    def __len__(self):
+        return len(self.x)
+
+
+class RamanDataset2(RamanDataset):
+    def __init__(self, path, train_data_fold, train=True):
+        super(RamanDataset2, self).__init__(path, train_data_fold, train)
+        self.x = self.x.reshape(-1, 881, 1)
+
+    def __getitem__(self, item):
+        # Randomly select a pure component and its signal
+        pure_component, mixture, label = super().__getitem__(item)
+        return np.stack((pure_component, mixture)).reshape(1, 881, 2), label
 
     def __len__(self):
         return len(self.x)

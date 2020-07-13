@@ -1,8 +1,8 @@
 import torch
 import tqdm
-from dataset import RamanDataset
+from dataset import RamanDataset2
 from torch.utils.data import DataLoader
-from model import Siamese1D
+from model import NotSiamese2D
 import argparse
 
 
@@ -20,7 +20,7 @@ def main():
                         help="number of data-loader worker threads")
     parser.add_argument("--batch_size", type=int, default=128,
                         help="Number of batch size")
-    parser.add_argument("--lr", type=float, default=0.0012,
+    parser.add_argument("--lr", type=float, default=0.00006,
                         help="learning rate")
     parser.add_argument("--model_checkpoint_freq", type=int, default=1,
                         help="Model checkpointing frequency per number of epochs")
@@ -28,14 +28,14 @@ def main():
                         help="Maximum number of epochs used before stopping training")
     args = parser.parse_args()
 
-    train_data = RamanDataset(args.data_path, args.train_data_fold)
-    valid_data = RamanDataset(args.data_path, args.train_data_fold, train=False)
+    train_data = RamanDataset2(args.data_path, args.train_data_fold)
+    valid_data = RamanDataset2(args.data_path, args.train_data_fold, train=False)
 
     train_loader = DataLoader(train_data, batch_size=args.batch_size, shuffle=False, num_workers=args.num_workers)
     valid_loader = DataLoader(valid_data, batch_size=args.batch_size, shuffle=False, num_workers=args.num_workers)
 
     loss_fn = torch.nn.BCEWithLogitsLoss()
-    net = Siamese1D()
+    net = NotSiamese2D()
 
     if args.cuda:
         net.cuda()
@@ -53,12 +53,11 @@ def train_single_epoch(net, train_loader, optimizer, loss_fn, epoch, cuda):
     net.train()
     iterator = tqdm.tqdm(train_loader)
     iterator.set_description("Epoch %d progress" % epoch)
-    for batch_id, (sig1, sig2, label) in enumerate(iterator):
+    for batch_id, (sig, label) in enumerate(iterator):
         if cuda:
-            sig1, sig2, label = sig1.cuda(), sig2.cuda(), label.cuda()
-        print(sig1.shape)
+            sig, label = sig.cuda(), label.cuda()
         optimizer.zero_grad()
-        output = net.forward(sig1, sig2)
+        output = net.forward(sig)
         loss = loss_fn(output, label)
         iterator.set_postfix({"Loss": "%.3f" % loss.item()})
         loss.backward()
@@ -71,11 +70,11 @@ def validate_single_epoch(net, valid_loader, loss_fn, epoch, cuda):
     iterator.set_description("Validation for epoch %d progress" % epoch)
     true_cases = 0
     total_cases = 0
-    for batch_id, (sig1, sig2, label) in enumerate(iterator):
+    for batch_id, (sig, label) in enumerate(iterator):
         if cuda:
-            sig1, sig2, label = sig1.cuda(), sig2.cuda(), label.cuda()
+            sig, label = sig.cuda(), label.cuda()
         with torch.no_grad():
-            prediction = net.forward(sig1, sig2)
+            prediction = net.forward(sig)
             loss = loss_fn(prediction, label)
             prediction.round_()
             prediction = prediction[prediction == label]
