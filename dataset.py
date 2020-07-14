@@ -47,7 +47,9 @@ class RamanDataset2(RamanDataset):
     def __getitem__(self, item):
         # Randomly select a pure component and its signal
         pure_component, mixture, label = super().__getitem__(item)
-        return np.stack((pure_component, mixture)).reshape(1, 881, 2), label
+        label_new = np.zeros(2).astype(np.float32)
+        label_new[int(label)] = 1.0
+        return np.stack((pure_component, mixture)).reshape(1, 881, 2), label_new
 
     def __len__(self):
         return len(self.x)

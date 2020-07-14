@@ -20,7 +20,7 @@ def main():
                         help="number of data-loader worker threads")
     parser.add_argument("--batch_size", type=int, default=128,
                         help="Number of batch size")
-    parser.add_argument("--lr", type=float, default=0.00006,
+    parser.add_argument("--lr", type=float, default=0.000006,
                         help="learning rate")
     parser.add_argument("--model_checkpoint_freq", type=int, default=1,
                         help="Model checkpointing frequency per number of epochs")
@@ -34,7 +34,7 @@ def main():
     train_loader = DataLoader(train_data, batch_size=args.batch_size, shuffle=False, num_workers=args.num_workers)
     valid_loader = DataLoader(valid_data, batch_size=args.batch_size, shuffle=False, num_workers=args.num_workers)
 
-    loss_fn = torch.nn.BCEWithLogitsLoss()
+    loss_fn = torch.nn.BCELoss()
     net = NotSiamese2D()
 
     if args.cuda:

@@ -26,10 +26,10 @@ class NotSiamese2D(nn.Module):
                                      nn.MaxPool2d((2, 1)),
                                      nn.Dropout2d(0.2),
                                      nn.Flatten(),
-                                     nn.Linear(3456, 2048),
+                                     nn.Linear(3456, 1024),
                                      nn.ReLU(inplace=True),
-                                     nn.Linear(2048, 1),
-                                     nn.Sigmoid()
+                                     nn.Linear(1024, 2),
+                                     nn.Softmax()
                                      )
         self.apply(_weights_init)
 
