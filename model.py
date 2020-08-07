@@ -75,7 +75,7 @@ class Siamese1D(nn.Module, ABC):
 def get_model(model_arch: str) -> nn.Module:
     if model_arch == 'deepcid-siamese':
         return SiameseDeepCid1D()
-    elif model_arch == 'origianl-siamese':
+    elif model_arch == 'original-siamese':
         return Siamese1D()
     else:
         raise NotImplementedError("The requested model is not implemented.")

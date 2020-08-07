@@ -54,7 +54,8 @@ def main():
     for epoch in range(args.num_epochs):
         train_single_epoch(net, train_loader, optimizer, loss_fn, epoch, args.cuda)
         validate_single_epoch(net, valid_loader, loss_fn, epoch, args.cuda)
-        save_model(net, args.model_path + "checkpoint-%02d.cpt" % (epoch + 1), epoch, args.model_checkpoint_freq)
+        save_model(net, args.model_path + "-" + args.model_arch + "-" +
+                   "checkpoint-%02d.cpt" % (epoch + 1), epoch, args.model_checkpoint_freq)
 
 
 def train_single_epoch(net, train_loader, optimizer, loss_fn, epoch, cuda):
