@@ -9,31 +9,48 @@ class DeepCidDataset(Dataset):
         x = np.load(path + '/spectrum.npy').astype(np.float32)
         y = np.load(path + '/components_naveen.npy')
         assert (x.shape[0] == y.shape[0])
-        fold_pos = int(len(x) * train_data_fold)
         # Pre-processing Xs:============================================================================================
-        x = x[:fold_pos] if train else x[fold_pos:]
-        # standard Gaussian scalar:
+        # standard Gaussian scalar used in the DeepCID paper
         scaler = preprocessing.StandardScaler().fit(x)
-        self.x = scaler.transform(x).reshape(-1, 1, 881)
-        # Pre-processing Ys:============================================================================================
-        self.y = y[:fold_pos] if train else y[fold_pos:]
+        x = scaler.transform(x)
+        x = x.reshape(-1, 1, x.shape[-1])
         # Finding pure components in the dataset:=======================================================================
-        pure_idx = set()
-        for i, entry in enumerate(self.y):
+        # They should be saved separately from the actual Xs so that both the train and test datasets have access to
+        # them
+        # The pure_component_table is in the form of (pure_comp_id, list(pure_component))
+        self.pure_component_table = {}
+        for i, entry in enumerate(y):
             if entry.sum() == 1:
-                pure_idx.add(i)
-        self.pure_idx = list(pure_idx)
+                component_id = np.where(entry == 1)[0][0]
+                if component_id not in self.pure_component_table.keys():
+                    self.pure_component_table[component_id] = [x[i]]
+                else:
+                    self.pure_component_table[component_id].append(x[i])
+
+        # Fold positions:===============================================================================================
+        fold_pos = int(len(x) * train_data_fold)
+        self.x = x[:fold_pos] if train else x[fold_pos:]
+        self.y = y[:fold_pos] if train else y[fold_pos:]
 
     def __getitem__(self, item):
-        # Randomly select a pure component and its signal
-        pure_component_idx = np.random.choice(len(self.pure_idx))
+        # Uniformly select whether the final label will be 0 or 1 for balancing what the model sees through
+        # training
+        label = np.random.choice(2)
         mixture = self.x[item]
         mixture_label = self.y[item]
-        pure_component = self.x[pure_component_idx]
-        pure_component_label = self.y[pure_component_idx].argmax()
-        # If the component is present in the mixture, the label is 1.0; Else, 0.0
-        label = np.array([mixture_label[pure_component_label] == 1], dtype=np.float32)
-        return pure_component, mixture, label
+
+        # Randomly select a pure component based on the label
+        possible_components = np.where(mixture_label == label)[0]
+        # Change label if it's not present in the mixture label array
+        if len(possible_components) == 0:
+            label = int(not label)
+            possible_components = np.where(mixture_label == label)[0]
+        pure_component_idx = np.random.choice(possible_components)
+        pure_component_array = self.pure_component_table[pure_component_idx]
+        # Randomly select a pure component signal out of the component entry:
+        pure_component = pure_component_array[np.random.choice(len(pure_component_array))]
+
+        return pure_component, mixture, np.array([label], dtype=np.float32)
 
     def __len__(self):
         return len(self.x)
