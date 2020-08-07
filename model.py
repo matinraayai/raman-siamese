@@ -5,7 +5,7 @@ import torch.nn.init as init
 
 def _weights_init(m: nn.Module):
     if isinstance(m, nn.Linear) or isinstance(m, nn.Conv1d):
-        init.kaiming_normal_(m.weight)
+        init.xavier_normal_(m.weight)
 
 
 class NotSiamese2D(nn.Module):
