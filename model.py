@@ -40,25 +40,27 @@ class NotSiamese2D(nn.Module):
 class Siamese1D(nn.Module):
     def __init__(self):
         super(Siamese1D, self).__init__()
-        self.network = nn.Sequential(nn.Conv2d(1, 32,
-                                               kernel_size=(5, 2),
-                                               stride=(2, 1),
+        self.network = nn.Sequential(nn.Conv1d(1, 16,
+                                               kernel_size=21,
                                                padding_mode='zeros'),
-                                     nn.ReLU(inplace=True),
-                                     nn.MaxPool1d(2),
+                                     nn.BatchNorm1d(16),
+                                     nn.LeakyReLU(inplace=True),
+                                     nn.MaxPool1d(2, stride=2),
+                                     nn.Conv1d(16, 32,
+                                               kernel_size=11,
+                                               padding_mode='zeros'),
                                      nn.BatchNorm1d(32),
+                                     nn.LeakyReLU(inplace=True),
+                                     nn.MaxPool1d(2, stride=2),
                                      nn.Conv1d(32, 64,
                                                kernel_size=5,
-                                               stride=2,
                                                padding_mode='zeros'),
-                                     nn.ReLU(inplace=True),
-                                     nn.MaxPool1d(2),
                                      nn.BatchNorm1d(64),
-                                     nn.Flatten(),
-                                     nn.Linear(3456, 4096),
-                                     nn.Sigmoid()
+                                     nn.LeakyReLU(inplace=True),
+                                     nn.MaxPool1d(2, stride=2),
+                                     nn.Flatten()
                                      )
-        self.out = nn.Sequential(nn.Linear(4096, 1), nn.Sigmoid())
+        self.out = nn.Sequential(nn.Linear(6592, 1), nn.Sigmoid())
         self.apply(_weights_init)
 
     def forward(self, x1, x2):
