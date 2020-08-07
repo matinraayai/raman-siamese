@@ -2,7 +2,7 @@ import torch
 import tqdm
 from dataset import DeepCidDataset
 from torch.utils.data import DataLoader
-from model import Siamese1D
+from model import get_model
 import argparse
 
 
@@ -16,6 +16,9 @@ def main():
                         help="Amount of original data to be used in training")
     parser.add_argument("--model_path", type=str, default="model/",
                         help="path to save model checkpoints")
+    parser.add_argument('--model-arch', choices=['deepcid-siamese', 'original-siamese'],
+                        default='original-siamese',
+                        help='architecture of the model')
     parser.add_argument("--num_workers", type=int, default=4,
                         help="number of data-loader worker threads")
     parser.add_argument("--batch_size", type=int, default=64,
@@ -39,7 +42,7 @@ def main():
     valid_loader = DataLoader(valid_data, batch_size=args.batch_size, shuffle=False, num_workers=args.num_workers)
 
     loss_fn = torch.nn.BCELoss()
-    net = Siamese1D()
+    net = get_model(args.model_arch)
 
     if args.cuda:
         net.cuda()
