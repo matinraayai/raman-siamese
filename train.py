@@ -56,7 +56,6 @@ def train_single_epoch(net, train_loader, optimizer, loss_fn, epoch, cuda):
     for batch_id, (sig1, sig2, label) in enumerate(iterator):
         if cuda:
             sig1, sig2, label = sig1.cuda(), sig2.cuda(), label.cuda()
-        print(sig1.shape)
         optimizer.zero_grad()
         output = net.forward(sig1, sig2)
         loss = loss_fn(output, label)
