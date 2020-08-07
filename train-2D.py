@@ -1,6 +1,6 @@
 import torch
 import tqdm
-from dataset import RamanDataset2
+from dataset import DeepCidDataset2
 from torch.utils.data import DataLoader
 from model import NotSiamese2D
 import argparse
@@ -28,8 +28,8 @@ def main():
                         help="Maximum number of epochs used before stopping training")
     args = parser.parse_args()
 
-    train_data = RamanDataset2(args.data_path, args.train_data_fold)
-    valid_data = RamanDataset2(args.data_path, args.train_data_fold, train=False)
+    train_data = DeepCidDataset2(args.data_path, args.train_data_fold)
+    valid_data = DeepCidDataset2(args.data_path, args.train_data_fold, train=False)
 
     train_loader = DataLoader(train_data, batch_size=args.batch_size, shuffle=False, num_workers=args.num_workers)
     valid_loader = DataLoader(valid_data, batch_size=args.batch_size, shuffle=False, num_workers=args.num_workers)

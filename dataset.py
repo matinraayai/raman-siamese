@@ -3,9 +3,9 @@ import numpy as np
 from sklearn import preprocessing
 
 
-class RamanDataset(Dataset):
+class DeepCidDataset(Dataset):
     def __init__(self, path, train_data_fold, train=True):
-        super(RamanDataset, self).__init__()
+        super(DeepCidDataset, self).__init__()
         x = np.load(path + '/spectrum.npy').astype(np.float32)
         y = np.load(path + '/components_naveen.npy')
         assert (x.shape[0] == y.shape[0])
@@ -39,9 +39,9 @@ class RamanDataset(Dataset):
         return len(self.x)
 
 
-class RamanDataset2(RamanDataset):
+class DeepCidDataset2(DeepCidDataset):
     def __init__(self, path, train_data_fold, train=True):
-        super(RamanDataset2, self).__init__(path, train_data_fold, train)
+        super(DeepCidDataset2, self).__init__(path, train_data_fold, train)
         self.x = self.x.reshape(-1, 881, 1)
 
     def __getitem__(self, item):
