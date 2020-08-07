@@ -18,10 +18,14 @@ def main():
                         help="path to save model checkpoints")
     parser.add_argument("--num_workers", type=int, default=4,
                         help="number of data-loader worker threads")
-    parser.add_argument("--batch_size", type=int, default=128,
+    parser.add_argument("--batch_size", type=int, default=64,
                         help="Number of batch size")
-    parser.add_argument("--lr", type=float, default=0.0012,
+    parser.add_argument("--lr", type=float, default=1e-3,
                         help="learning rate")
+    parser.add_argument("--weight-decay", type=float, default=1e-3,
+                        help='Weight decay for the optimizer')
+    parser.add_argument('--beta', type=tuple,
+                        default=(0.5, 0.999), help="beta for the optimizer")
     parser.add_argument("--model_checkpoint_freq", type=int, default=1,
                         help="Model checkpointing frequency per number of epochs")
     parser.add_argument("--num_epochs", type=int, default=50000,
@@ -34,13 +38,14 @@ def main():
     train_loader = DataLoader(train_data, batch_size=args.batch_size, shuffle=False, num_workers=args.num_workers)
     valid_loader = DataLoader(valid_data, batch_size=args.batch_size, shuffle=False, num_workers=args.num_workers)
 
-    loss_fn = torch.nn.BCEWithLogitsLoss()
+    loss_fn = torch.nn.BCELoss()
     net = Siamese1D()
 
     if args.cuda:
         net.cuda()
 
-    optimizer = torch.optim.Adam(net.parameters(), lr=args.lr)
+    optimizer = torch.optim.Adam(net.parameters(), lr=args.lr,
+                                 betas=args.beta, weight_decay=args.weight_decay)
     optimizer.zero_grad()
 
     for epoch in range(args.num_epochs):
